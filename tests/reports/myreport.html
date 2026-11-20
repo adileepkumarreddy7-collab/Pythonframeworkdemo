@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">myreport.html</title>
+      <style type="text/css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  vertical-align: top;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+#environment ul {
+  margin: 0;
+  padding: 0 20px;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+.col-links__extra {
+  margin-right: 3px;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.logwrapper {
+  max-height: 230px;
+  overflow-y: scroll;
+  background-color: #e6e6e6;
+}
+.logwrapper.expanded {
+  max-height: none;
+}
+.logwrapper.expanded .logexpander:after {
+  content: "collapse [-]";
+}
+.logwrapper .logexpander {
+  z-index: 1;
+  position: sticky;
+  top: 10px;
+  width: max-content;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 5px 7px;
+  margin: 10px 0 10px calc(100% - 80px);
+  cursor: pointer;
+  background-color: #e6e6e6;
+}
+.logwrapper .logexpander:after {
+  content: "expand [+]";
+}
+.logwrapper .logexpander:hover {
+  color: #000;
+  border-color: #000;
+}
+.logwrapper .log {
+  min-height: 40px;
+  position: relative;
+  top: -50px;
+  height: calc(100% + 50px);
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  padding: 5px;
+  padding-right: 80px;
+  white-space: pre-wrap;
+}
+
+div.media {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin: 0 5px;
+  overflow: hidden;
+  width: 320px;
+}
+
+.media-container {
+  display: grid;
+  grid-template-columns: 25px auto 25px;
+  align-items: center;
+  flex: 1 1;
+  overflow: hidden;
+  height: 200px;
+}
+
+.media-container--fullscreen {
+  grid-template-columns: 0px auto 0px;
+}
+
+.media-container__nav--right,
+.media-container__nav--left {
+  text-align: center;
+  cursor: pointer;
+}
+
+.media-container__viewport {
+  cursor: pointer;
+  text-align: center;
+  height: inherit;
+}
+.media-container__viewport img,
+.media-container__viewport video {
+  object-fit: cover;
+  width: 100%;
+  max-height: 100%;
+}
+
+.media__name,
+.media__counter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 0 0 25px;
+  align-items: center;
+}
+
+.collapsible td:not(.col-links) {
+  cursor: pointer;
+}
+.collapsible td:not(.col-links):hover::after {
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.col-result {
+  width: 130px;
+}
+.col-result:hover::after {
+  content: " (hide details)";
+}
+
+.col-result.collapsed:hover::after {
+  content: " (show details)";
+}
+
+#environment-header h2:hover::after {
+  content: " (hide details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#environment-header.collapsed h2:hover::after {
+  content: " (show details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+.sortable.desc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: -12.5px;
+  border: 10px solid #4caf50;
+  border-bottom: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+.sortable.asc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: 12.5px;
+  border: 10px solid #4caf50;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.hidden, .summary__reload__button.hidden {
+  display: none;
+}
+
+.summary__data {
+  flex: 0 0 550px;
+}
+.summary__reload {
+  flex: 1 1;
+  display: flex;
+  justify-content: center;
+}
+.summary__reload__button {
+  flex: 0 0 300px;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  background-color: #4caf50;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.summary__reload__button:hover {
+  background-color: #46a049;
+}
+.summary__spacer {
+  flex: 0 0 550px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters,
+.collapse {
+  display: flex;
+  align-items: center;
+}
+.filters button,
+.collapse button {
+  color: #999;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.filters button:hover,
+.collapse button:hover {
+  color: #ccc;
+}
+
+.filter__label {
+  margin-right: 10px;
+}
+
+      </style>
+    
+  </head>
+  <body>
+    <h1 id="title">myreport.html</h1>
+    <p>Report generated on 20-Nov-2026 at 13:26:23 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.2.0</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</td>
+        </tr>
+      </tbody>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left">&lt;</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">&gt;</div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">3 tests took 00:01:24.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" >
+            <span class="failed">2 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" >
+            <span class="passed">1 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled>
+            <span class="rerun">0 Reruns</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="retried" disabled>
+            <span class="retried">0 Retried,</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.15.2&#34;, &#34;Platform&#34;: &#34;Windows-11-10.0.26200-SP0&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;9.2.0&#34;, &#34;pluggy&#34;: &#34;1.7.0&#34;}, &#34;Plugins&#34;: {&#34;allure-pytest&#34;: &#34;2.16.2&#34;, &#34;Faker&#34;: &#34;40.54.0&#34;, &#34;asyncio&#34;: &#34;1.5.0&#34;, &#34;html&#34;: &#34;4.2.0&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;, &#34;playwright&#34;: &#34;0.10.0&#34;, &#34;rerunfailures&#34;: &#34;16.7&#34;, &#34;xdist&#34;: &#34;3.8.0&#34;}, &#34;JAVA_HOME&#34;: &#34;C:\\Program Files\\Java\\jdk-17&#34;}, &#34;tests&#34;: {&#34;tests/test_login_page.py::test_login_page_mobile_number[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_login_page.py::test_login_page_mobile_number[chromium]&#34;, &#34;duration&#34;: &#34;00:00:43&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_login_page.py::test_login_page_mobile_number[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:43&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;---------------------------- Captured stdout setup -----------------------------\n[OK] Starting browser: chromium\n[OK] Headless mode: False (headed=True)\n[INFO] Navigating to: https://www.flipkart.com/\n[TRACE] Tracing enabled - capturing screenshots and actions\n--------------------------- Captured stdout teardown ---------------------------\n[RESULT] Test &amp;#x27;test_login_page_mobile_number[chromium]&amp;#x27; result: [PASS]\n[SAVE] Trace saved: reports/traces/test_login_page_mobile_number[chromium]_trace.zip\n[CLEANUP] Closing browser context and stopping Playwright...\n&#34;}], &#34;tests/test_product_page.py::test_product_page[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;tests/test_product_page.py::test_product_page[chromium]&#34;, &#34;duration&#34;: &#34;00:00:16&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_product_page.py::test_product_page[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:16&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;page = &amp;lt;Page url=&amp;#x27;https://www.flipkart.com/search?q=Samsung%20s25&amp;#x27;&amp;gt;\n\n    def test_product_page(page):\n        search = SearchPage(page)\n    \n        page.goto(&amp;quot;https://www.flipkart.com/search?q=Samsung s25&amp;quot;,wait_until=&amp;quot;domcontentloaded&amp;quot;)\n&amp;gt;       search.validate_search_results()\n\ntest_product_page.py:9: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;Pages.search_page.SearchPage object at 0x0000028F1A778980&amp;gt;\n\n    def validate_search_results(self):\n&amp;gt;       expect(self.page).to_have_url(re.compile(r&amp;quot;[?&amp;amp;]q=iphone&amp;quot;, re.IGNORECASE))\nE       AssertionError: Page URL expected to be &amp;#x27;re.compile(&amp;#x27;[?&amp;amp;]q=iphone&amp;#x27;, re.IGNORECASE)&amp;#x27;\nE       Actual value: https://www.flipkart.com/search?q=Samsung%20s25 \nE       Call log:\nE         - Expect &amp;quot;to_have_url&amp;quot; with timeout 5000ms\nE           6 \u00d7 locator resolved to &amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt;\u2026&amp;lt;/html&amp;gt;\nE             - unexpected value &amp;quot;https://www.flipkart.com/search?q=Samsung%20s25&amp;quot;\nE           6 \u00d7 locator resolved to &amp;lt;html class=&amp;quot;&amp;quot; lang=&amp;quot;en&amp;quot;&amp;gt;\u2026&amp;lt;/html&amp;gt;\nE             - unexpected value &amp;quot;https://www.flipkart.com/search?q=Samsung%20s25&amp;quot;\nE       \nE       Aria snapshot:\nE       - link &amp;quot;Flipkart&amp;quot;:\nE         - /url: /\nE         - img &amp;quot;Flipkart&amp;quot;\nE       - link &amp;quot;Explore Plus&amp;quot;:\nE         - /url: /plus\nE         - text: Explore Plus\nE         - img\nE       - textbox &amp;quot;Search for products, brands and more&amp;quot;: Samsung s25\nE       - button:\nE         - img\nE       - link &amp;quot;Login&amp;quot;:\nE         - /url: /login?ret=%2Fsearch%3Fq%3DSamsung%2520s25\nE       - link &amp;quot;Become a Seller&amp;quot;:\nE         - /url: https://seller.flipkart.com/sell-online/?utm_source=fkwebsite&amp;amp;utm_medium=websitedirect\nE       - text: More\nE       - img\nE       - link &amp;quot;Cart&amp;quot;:\nE         - /url: /viewcart?exploreMode=true&amp;amp;preference=FLIPKART\nE         - img\nE         - text: Cart\nE       - text: Electronics\nE       - img\nE       - text: TVs &amp;amp; Appliances\nE       - img\nE       - text: Men\nE       - img\nE       - text: Women\nE       - img\nE       - text: Baby &amp;amp; Kids\nE       - img\nE       - text: Home &amp;amp; Furniture\nE       - img\nE       - text: Sports, Books &amp;amp; More\nE       - img\nE       - link &amp;quot;Flights&amp;quot;:\nE         - /url: /travel/flights?otracker=nmenu_Flights\nE       - link &amp;quot;Offer Zone&amp;quot;:\nE         - /url: /offers-list/top-deals?screen=dynamic&amp;amp;pk=themeViews%3DDT-OMU-A2%3ADT-OMU~widgetType%3DdealCard~contentType%3Dneo&amp;amp;otracker=nmenu_offer-zone\nE       - text: Filters CATEGORIES\nE       - img\nE       - link &amp;quot;Mobiles &amp;amp; Accessories&amp;quot;:\nE         - /url: /mobiles-accessories/pr?sid=tyy&amp;amp;q=Samsung+s25&amp;amp;otracker=categorytree\nE       - img\nE       - link &amp;quot;Mobiles&amp;quot;:\nE         - /url: /mobiles/pr?sid=tyy,4io&amp;amp;q=Samsung+s25&amp;amp;otracker=categorytree\nE       - text: Ram\nE       - img\nE       - text: 8 GB and Above Network Type\nE       - img\nE       - text: Internal Storage\nE       - img\nE       - text: Price . . . . . .\nE       - combobox:\nE         - option &amp;quot;Min&amp;quot; [selected]\nE         - option &amp;quot;\u20b910000&amp;quot;\nE         - option &amp;quot;\u20b915000&amp;quot;\nE         - option &amp;quot;\u20b920000&amp;quot;\nE         - option &amp;quot;\u20b930000&amp;quot;\nE       - text: to\nE       - combobox:\nE         - option &amp;quot;\u20b910000&amp;quot;\nE         - option &amp;quot;\u20b915000&amp;quot;\nE         - option &amp;quot;\u20b920000&amp;quot;\nE         - option &amp;quot;\u20b930000&amp;quot;\nE         - option &amp;quot;\u20b930000+&amp;quot; [selected]\nE       - text: Processor Brand\nE       - img\nE       - text: Battery Capacity\nE       - img\nE       - text: Operating System\nE       - img\nE       - text: Speciality\nE       - img\nE       - text: Screen Size\nE       - img\nE       - text: Sim Type\nE       - img\nE       - text: Type\nE       - img\nE       - text: Clock Speed\nE       - img\nE       - text: Discount\nE       - img\nE       - text: 50% or more 40% or more 30% or more 20% or more 10% or more Resolution Type\nE       - img\nE       - img\nE       - text: &amp;quot;? Primary Camera&amp;quot;\nE       - img\nE       - text: Brand\nE       - img\nE       - text: Samsung Customer Ratings\nE       - img\nE       - text: Offers\nE       - img\nE       - text: Special Price Buy More, Save More Number of Cores\nE       - img\nE       - text: Secondary Camera\nE       - img\nE       - text: Country Of Origin\nE       - img\nE       - text: Features\nE       - img\nE       - text: Availability\nE       - img\nE       - text: GST Invoice Available\nE       - img\nE       - link &amp;quot;Need help? Help me decide Buying Guide&amp;quot;:\nE         - /url: /buying-guide/mobiles?sid=tyy,4io&amp;amp;otracker=bg_from_browse_lhs\nE         - text: Need help? Help me decide\nE         - img\nE         - img &amp;quot;Buying Guide&amp;quot;\nE       - link &amp;quot;Home&amp;quot;:\nE         - /url: /\nE       - img\nE       - link &amp;quot;Mobiles &amp;amp; Accessories&amp;quot;:\nE         - /url: /mobiles-accessories/pr?sid=tyy&amp;amp;marketplace=FLIPKART\nE       - img\nE       - link &amp;quot;Mobiles&amp;quot;:\nE         - /url: /mobiles/pr?sid=tyy,4io&amp;amp;marketplace=FLIPKART\nE       - text: Showing 1 \u2013 24 of 177 results for &amp;quot;Samsung s25&amp;quot; Sort By Relevance Popularity Price -- Low to High Price -- High to Low Newest First\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Navy, 128 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Navy, 128 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 128 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b965,999 \u20b91,04,999 37% off Upto \u20b945,450 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-navy-128-gb/p/itm957543a944c80?pid=MOBHQDMKCCDK2VT7&amp;amp;lid=LSTMOBHQDMKCCDK2VT7FQCGRZ&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_1&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=en_DDfdLDc2geQ42feWchIc0abOqma7Ip7hOpN_PDwXGFFmR7ONdtHNLKr29omCahu6A_BT4DFnBh4CFXYHKkQJn362qi7wqVFglIioK65yiRbRmrutrvT4G0GUbrvFpaAt&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Navy, 128 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Navy, 128 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 128 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b965,999 \u20b91,04,999 37% off\nE         - img\nE         - text: Upto \u20b945,450 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Icyblue, 128 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Icyblue, 128 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 128 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b965,999 \u20b91,04,999 37% off Upto \u20b945,450 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-icyblue-128-gb/p/itm95bd766346a05?pid=MOBHQDMKATG28X27&amp;amp;lid=LSTMOBHQDMKATG28X27GTDQYF&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_2&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=en_DDfdLDc2geQ42feWchIc0abOqma7Ip7hOpN_PDwXGFGrK7V8YFvDIecC5PrybY2tkxApvS2MiWXQ9tbE_7p2BX62qi7wqVFglIioK65yiRbRmrutrvT4G0GUbrvFpaAt&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Icyblue, 128 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Icyblue, 128 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 128 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b965,999 \u20b91,04,999 37% off\nE         - img\nE         - text: Upto \u20b945,450 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Icyblue, 256 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Icyblue, 256 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b972,999 \u20b91,14,999 36% off Only few left Upto \u20b946,750 Off on Exchange&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-icyblue-256-gb/p/itmb4ce5781b8a3b?pid=MOBHQCH6HGPPR9JS&amp;amp;lid=LSTMOBHQCH6HGPPR9JSIOXPZ6&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_3&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQCH6HGPPR9JS.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Icyblue, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Icyblue, 256 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b972,999 \u20b91,14,999 36% off\nE         - img\nE         - text: Only few left Upto \u20b946,750 Off on Exchange\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Silver Shadow, 128 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Silver Shadow, 128 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 128 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b965,999 \u20b91,04,999 37% off Upto \u20b945,450 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-silver-shadow-128-gb/p/itm957543a944c80?pid=MOBHQDMKYG8JCE4R&amp;amp;lid=LSTMOBHQDMKYG8JCE4RZTNP8N&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_4&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQDMKYG8JCE4R.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Silver Shadow, 128 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Silver Shadow, 128 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 128 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b965,999 \u20b91,04,999 37% off\nE         - img\nE         - text: Upto \u20b945,450 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 128 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b965,999 \u20b91,04,999 37% off Upto \u20b945,450 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-mint-128-gb/p/itmce254cb90f8d4?pid=MOBHQDMKZEFNNVW2&amp;amp;lid=LSTMOBHQDMKZEFNNVW2DJOWYO&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_5&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=en_DDfdLDc2geQ42feWchIc0abOqma7Ip7hOpN_PDwXGFHW-8MGqrsugByP4lxTutMORJLiriZKsv1cyBY614zDJ362qi7wqVFglIioK65yiRbRmrutrvT4G0GUbrvFpaAt&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 128 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b965,999 \u20b91,04,999 37% off\nE         - img\nE         - text: Upto \u20b945,450 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Silver Shadow, 256 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Silver Shadow, 256 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b972,999 \u20b91,14,999 36% off Upto \u20b946,750 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-silver-shadow-256-gb/p/itmfa24ddc3cf130?pid=MOBHQCH6G5YNGNRG&amp;amp;lid=LSTMOBHQCH6G5YNGNRGTAD01W&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;spotlightTagId=default_BestsellerId_tyy%2F4io&amp;amp;srno=s_1_6&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQCH6G5YNGNRG.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Silver Shadow, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Silver Shadow, 256 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b972,999 \u20b91,14,999 36% off\nE         - img\nE         - text: Upto \u20b946,750 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Navy, 256 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Navy, 256 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b972,999 \u20b91,14,999 36% off Upto \u20b946,750 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-navy-256-gb/p/itm21a6fef66d537?pid=MOBHQCH6WUTZHHBH&amp;amp;lid=LSTMOBHQCH6WUTZHHBHIJDIBU&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;spotlightTagId=default_BestsellerId_tyy%2F4io&amp;amp;srno=s_1_7&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQCH6WUTZHHBH.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Navy, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Navy, 256 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b972,999 \u20b91,14,999 36% off\nE         - img\nE         - text: Upto \u20b946,750 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Icyblue, 128 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Icyblue, 128 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 128 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b965,999 \u20b91,04,999 37% off Upto \u20b945,450 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-icyblue-128-gb/p/itm95bd766346a05?pid=MOBHQDMKATG28X27&amp;amp;lid=LSTMOBHQDMKATG28X27GTDQYF&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_8&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQDMKATG28X27.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Icyblue, 128 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Icyblue, 128 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 128 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b965,999 \u20b91,04,999 37% off\nE         - img\nE         - text: Upto \u20b945,450 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Navy, 128 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Navy, 128 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 128 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b965,999 \u20b91,04,999 37% off Upto \u20b945,450 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-navy-128-gb/p/itm957543a944c80?pid=MOBHQDMKCCDK2VT7&amp;amp;lid=LSTMOBHQDMKCCDK2VT7FQCGRZ&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_9&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQDMKCCDK2VT7.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Navy, 128 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Navy, 128 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 128 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b965,999 \u20b91,04,999 37% off\nE         - img\nE         - text: Upto \u20b945,450 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Mint, 256 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Mint, 256 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b972,999 \u20b91,14,999 36% off Upto \u20b946,750 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-mint-256-gb/p/itmbd34d8291f3b0?pid=MOBHQCH6RAKHM7XS&amp;amp;lid=LSTMOBHQCH6RAKHM7XS7ZP6Z8&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_10&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQCH6RAKHM7XS.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Mint, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Mint, 256 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b972,999 \u20b91,14,999 36% off\nE         - img\nE         - text: Upto \u20b946,750 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB) Add to Compare Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB) 4.6 23,832 Ratings &amp;amp; 2,077 Reviews \u2022 12 GB RAM | 128 GB ROM \u2022 15.75 cm (6.2 inch) Full HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b965,999 \u20b91,04,999 37% off Upto \u20b945,450 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-mint-128-gb/p/itmce254cb90f8d4?pid=MOBHQDMKZEFNNVW2&amp;amp;lid=LSTMOBHQDMKZEFNNVW2DJOWYO&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_11&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQDMKZEFNNVW2.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB) 4.6\nE         - img\nE         - text: 23,832 Ratings &amp;amp; 2,077 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 128 GB ROM\nE           - listitem: \u2022 15.75 cm (6.2 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b965,999 \u20b91,04,999 37% off\nE         - img\nE         - text: Upto \u20b945,450 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 Plus 5G (Silver Shadow, 256 GB) Add to Compare Samsung Galaxy S25 Plus 5G (Silver Shadow, 256 GB) 4.6 1,787 Ratings &amp;amp; 206 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 17.02 cm (6.7 inch) Quad HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4900 mAh Battery \u2022 8 Elite for Galxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b973,499 \u20b999,999 26% off Upto \u20b946,750 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-plus-5g-silver-shadow-256-gb/p/itm8d76a9b476932?pid=MOBH8K8UJTZZN7WZ&amp;amp;lid=LSTMOBH8K8UJTZZN7WZTHXXFT&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_12&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8UJTZZN7WZ.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Plus 5G (Silver Shadow, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Plus 5G (Silver Shadow, 256 GB) 4.6\nE         - img\nE         - text: 1,787 Ratings &amp;amp; 206 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 17.02 cm (6.7 inch) Quad HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4900 mAh Battery\nE           - listitem: \u2022 8 Elite for Galxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b973,499 \u20b999,999 26% off\nE         - img\nE         - text: Upto \u20b946,750 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 256 GB) Add to Compare Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 256 GB) 4.6 6,068 Ratings &amp;amp; 499 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 17.53 cm (6.9 inch) Quad HD+ Display \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera \u2022 5000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b986,978 \u20b91,29,999 33% off Only few left Upto \u20b953,750 Off on Exchange&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-silverblue-256-gb/p/itm413a5c3f30151?pid=MOBH8K8U5FWQWD6G&amp;amp;lid=LSTMOBH8K8U5FWQWD6G9MPDNA&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_13&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8U5FWQWD6G.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 256 GB) 4.6\nE         - img\nE         - text: 6,068 Ratings &amp;amp; 499 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 17.53 cm (6.9 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE           - listitem: \u2022 5000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b986,978 \u20b91,29,999 33% off\nE         - img\nE         - text: Only few left Upto \u20b953,750 Off on Exchange\nE       - link &amp;quot;Samsung Galaxy S25 Plus 5G (Navy, 256 GB) Add to Compare Samsung Galaxy S25 Plus 5G (Navy, 256 GB) 4.6 1,787 Ratings &amp;amp; 206 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 17.02 cm (6.7 inch) Quad HD+ Display \u2022 50MP + 10MP + 12MP | 12MP Front Camera \u2022 4900 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b973,499 \u20b999,999 26% off Upto \u20b946,750 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-plus-5g-navy-256-gb/p/itm5d4bdb068f418?pid=MOBH8K8UFKWSTMHA&amp;amp;lid=LSTMOBH8K8UFKWSTMHA03MBZS&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_14&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8UFKWSTMHA.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Plus 5G (Navy, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Plus 5G (Navy, 256 GB) 4.6\nE         - img\nE         - text: 1,787 Ratings &amp;amp; 206 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 17.02 cm (6.7 inch) Quad HD+ Display\nE           - listitem: \u2022 50MP + 10MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 4900 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b973,499 \u20b999,999 26% off\nE         - img\nE         - text: Upto \u20b946,750 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Black, 256 GB) Add to Compare Samsung Galaxy S25 Ultra 5G (Titanium Black, 256 GB) 4.6 6,068 Ratings &amp;amp; 499 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 17.53 cm (6.9 inch) Quad HD+ Display \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera \u2022 5000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b987,463 \u20b91,29,999 32% off Only 4 left Upto \u20b953,750 Off on Exchange&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-black-256-gb/p/itm09d676ceb930d?pid=MOBH8K8UVNGVNGKN&amp;amp;lid=LSTMOBH8K8UVNGVNGKNGR4KMG&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_15&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8UVNGVNGKN.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Black, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Ultra 5G (Titanium Black, 256 GB) 4.6\nE         - img\nE         - text: 6,068 Ratings &amp;amp; 499 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 17.53 cm (6.9 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE           - listitem: \u2022 5000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b987,463 \u20b91,29,999 32% off\nE         - img\nE         - text: Only 4 left Upto \u20b953,750 Off on Exchange\nE       - link &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Whitesilver, 256 GB) Add to Compare Samsung Galaxy S25 Ultra 5G (Titanium Whitesilver, 256 GB) 4.6 6,068 Ratings &amp;amp; 499 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 17.53 cm (6.9 inch) Quad HD+ Display \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera \u2022 5000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b989,425 \u20b91,29,999 31% off Only 4 left Upto \u20b953,750 Off on Exchange&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-whitesilver-256-gb/p/itm9beb2f2beaa5e?pid=MOBH8K8U56WRFZFR&amp;amp;lid=LSTMOBH8K8U56WRFZFR80TDUH&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_16&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8U56WRFZFR.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Whitesilver, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Ultra 5G (Titanium Whitesilver, 256 GB) 4.6\nE         - img\nE         - text: 6,068 Ratings &amp;amp; 499 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 17.53 cm (6.9 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE           - listitem: \u2022 5000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b989,425 \u20b91,29,999 31% off\nE         - img\nE         - text: Only 4 left Upto \u20b953,750 Off on Exchange\nE       - link &amp;quot;Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 256 GB) Add to Compare Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 256 GB) 4.6 611 Ratings &amp;amp; 74 Reviews \u2022 12 GB RAM | 256 GB ROM \u2022 16.91 cm (6.657 inch) Quad HD+ Display \u2022 200MP + 12MP | 12MP Front Camera \u2022 3900 mAh Battery \u2022 Qualcomm Snapdragon 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b989,999 \u20b91,09,999 18% off Only few left Upto \u20b953,750 Off on Exchange&amp;quot;:\nE         - /url: /samsung-galaxy-s25-edge-5g-titanium-jetblack-256-gb/p/itmc91f3f202a90f?pid=MOBHBXJHFGGJFW5C&amp;amp;lid=LSTMOBHBXJHFGGJFW5CLKP407&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_17&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHBXJHFGGJFW5C.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 256 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 256 GB) 4.6\nE         - img\nE         - text: 611 Ratings &amp;amp; 74 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 256 GB ROM\nE           - listitem: \u2022 16.91 cm (6.657 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 3900 mAh Battery\nE           - listitem: \u2022 Qualcomm Snapdragon 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b989,999 \u20b91,09,999 18% off\nE         - img\nE         - text: Only few left Upto \u20b953,750 Off on Exchange\nE       - link &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Gray, 512 GB) Add to Compare Samsung Galaxy S25 Ultra 5G (Titanium Gray, 512 GB) 4.6 6,068 Ratings &amp;amp; 499 Reviews \u2022 12 GB RAM | 512 GB ROM \u2022 17.53 cm (6.9 inch) Quad HD+ Display \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera \u2022 5000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b91,39,999 \u20b91,41,999 1% off Upto \u20b971,650 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-gray-512-gb/p/itm4edf9ee3c6c2d?pid=MOBH8K8U2FZXCP2R&amp;amp;lid=LSTMOBH8K8U2FZXCP2R0C4UGD&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_18&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8U2FZXCP2R.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Gray, 512 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Ultra 5G (Titanium Gray, 512 GB) 4.6\nE         - img\nE         - text: 6,068 Ratings &amp;amp; 499 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 512 GB ROM\nE           - listitem: \u2022 17.53 cm (6.9 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE           - listitem: \u2022 5000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b91,39,999 \u20b91,41,999 1% off Upto \u20b971,650 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Whitesilver, 512 GB) Add to Compare Samsung Galaxy S25 Ultra 5G (Titanium Whitesilver, 512 GB) 4.6 6,068 Ratings &amp;amp; 499 Reviews \u2022 12 GB RAM | 512 GB ROM \u2022 17.53 cm (6.9 inch) Quad HD+ Display \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera \u2022 5000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b91,39,999 \u20b91,41,999 1% off Upto \u20b971,650 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-whitesilver-512-gb/p/itm28d4275302a07?pid=MOBH8K8URFQT737M&amp;amp;lid=LSTMOBH8K8URFQT737MZHYHWJ&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_19&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8URFQT737M.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Whitesilver, 512 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Ultra 5G (Titanium Whitesilver, 512 GB) 4.6\nE         - img\nE         - text: 6,068 Ratings &amp;amp; 499 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 512 GB ROM\nE           - listitem: \u2022 17.53 cm (6.9 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE           - listitem: \u2022 5000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b91,39,999 \u20b91,41,999 1% off\nE         - img\nE         - text: Upto \u20b971,650 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 512 GB) Add to Compare Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 512 GB) 4.6 611 Ratings &amp;amp; 74 Reviews \u2022 12 GB RAM | 512 GB ROM \u2022 16.91 cm (6.657 inch) Quad HD+ Display \u2022 200MP + 12MP | 12MP Front Camera \u2022 3900 mAh Battery \u2022 Qualcomm Snapdragon 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b91,01,999 \u20b91,21,999 16% off Upto \u20b964,500 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-edge-5g-titanium-jetblack-512-gb/p/itma2ff84b74527b?pid=MOBHBXJHW2VN5A2M&amp;amp;lid=LSTMOBHBXJHW2VN5A2MVEYR8O&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_20&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHBXJHW2VN5A2M.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 512 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 512 GB) 4.6\nE         - img\nE         - text: 611 Ratings &amp;amp; 74 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 512 GB ROM\nE           - listitem: \u2022 16.91 cm (6.657 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 12MP | 12MP Front Camera\nE           - listitem: \u2022 3900 mAh Battery\nE           - listitem: \u2022 Qualcomm Snapdragon 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b91,01,999 \u20b91,21,999 16% off\nE         - img\nE         - text: Upto \u20b964,500 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 512 GB) Add to Compare Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 512 GB) 4.6 6,068 Ratings &amp;amp; 499 Reviews \u2022 12 GB RAM | 512 GB ROM \u2022 17.53 cm (6.9 inch) Quad HD+ Display \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera \u2022 5000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b91,09,999 \u20b91,49,999 26% off Upto \u20b971,650 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-silverblue-512-gb/p/itm2ce28bbf75993?pid=MOBH8K8UVQCSQE3Z&amp;amp;lid=LSTMOBH8K8UVQCSQE3ZYOXMDS&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_21&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8UVQCSQE3Z.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 512 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 512 GB) 4.6\nE         - img\nE         - text: 6,068 Ratings &amp;amp; 499 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 512 GB ROM\nE           - listitem: \u2022 17.53 cm (6.9 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE           - listitem: \u2022 5000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b91,09,999 \u20b91,49,999 26% off\nE         - img\nE         - text: Upto \u20b971,650 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Black, 512 GB) Add to Compare Samsung Galaxy S25 Ultra 5G (Titanium Black, 512 GB) 4.6 6,068 Ratings &amp;amp; 499 Reviews \u2022 12 GB RAM | 512 GB ROM \u2022 17.53 cm (6.9 inch) Quad HD+ Display \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera \u2022 5000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b91,39,999 \u20b91,41,999 1% off Upto \u20b971,650 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-black-512-gb/p/itmc5f14b041aa5b?pid=MOBH8K8UZPUKTTXK&amp;amp;lid=LSTMOBH8K8UZPUKTTXKDDLTOJ&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_22&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8UZPUKTTXK.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Black, 512 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Ultra 5G (Titanium Black, 512 GB) 4.6\nE         - img\nE         - text: 6,068 Ratings &amp;amp; 499 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 512 GB ROM\nE           - listitem: \u2022 17.53 cm (6.9 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE           - listitem: \u2022 5000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b91,39,999 \u20b91,41,999 1% off\nE         - img\nE         - text: Upto \u20b971,650 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 1024 GB) Add to Compare Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 1024 GB) 4.6 6,068 Ratings &amp;amp; 499 Reviews \u2022 12 GB RAM | 1024 GB ROM \u2022 17.53 cm (6.9 inch) Quad HD+ Display \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera \u2022 5000 mAh Battery \u2022 8 Elite for Galaxy Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b91,65,999 Upto \u20b971,650 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-silverblue-1024-gb/p/itm7d0e1ef71672e?pid=MOBH8K8UFSUDUUZZ&amp;amp;lid=LSTMOBH8K8UFSUDUUZZBUZ1UW&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;srno=s_1_23&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBH8K8UFSUDUUZZ.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 1024 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 1024 GB) 4.6\nE         - img\nE         - text: 6,068 Ratings &amp;amp; 499 Reviews\nE         - list:\nE           - listitem: \u2022 12 GB RAM | 1024 GB ROM\nE           - listitem: \u2022 17.53 cm (6.9 inch) Quad HD+ Display\nE           - listitem: \u2022 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE           - listitem: \u2022 5000 mAh Battery\nE           - listitem: \u2022 8 Elite for Galaxy Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b91,65,999\nE         - img\nE         - text: Upto \u20b971,650 Off on Exchange Bank Offer\nE       - link &amp;quot;Samsung Galaxy S25 FE 5G (Jetblack, 128 GB) Add to Compare Samsung Galaxy S25 FE 5G (Jetblack, 128 GB) 4.5 18,188 Ratings &amp;amp; 1,573 Reviews \u2022 8 GB RAM | 128 GB ROM \u2022 17.02 cm (6.7 inch) Full HD+ Display \u2022 50MP + 12MP + 8MP | 12MP Front Camera \u2022 4900 mAh Li-ion Battery \u2022 Exynos 2400 Processor \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories \u20b949,999 \u20b989,999 44% off Upto \u20b933,300 Off on Exchange Bank Offer&amp;quot;:\nE         - /url: /samsung-galaxy-s25-fe-5g-jetblack-128-gb/p/itm90e887b150eea?pid=MOBHQCH6FPTX5FZ2&amp;amp;lid=LSTMOBHQCH6FPTX5FZ26HBEZT&amp;amp;marketplace=FLIPKART&amp;amp;q=Samsung+s25&amp;amp;store=tyy%2F4io&amp;amp;spotlightTagId=default_BestsellerId_tyy%2F4io&amp;amp;srno=s_1_24&amp;amp;otracker=search&amp;amp;fm=organic&amp;amp;iid=c02e64fb-ab8c-4602-b03d-17e47f84a028.MOBHQCH6FPTX5FZ2.SEARCH&amp;amp;ppt=None&amp;amp;ppn=None&amp;amp;ssid=y1890hvwao0000001795161352050&amp;amp;qH=7dd921c930d22d53&amp;amp;ov_redirect=true\nE         - img &amp;quot;Samsung Galaxy S25 FE 5G (Jetblack, 128 GB)&amp;quot;\nE         - text: Add to Compare\nE         - img\nE         - text: Samsung Galaxy S25 FE 5G (Jetblack, 128 GB) 4.5\nE         - img\nE         - text: 18,188 Ratings &amp;amp; 1,573 Reviews\nE         - list:\nE           - listitem: \u2022 8 GB RAM | 128 GB ROM\nE           - listitem: \u2022 17.02 cm (6.7 inch) Full HD+ Display\nE           - listitem: \u2022 50MP + 12MP + 8MP | 12MP Front Camera\nE           - listitem: \u2022 4900 mAh Li-ion Battery\nE           - listitem: \u2022 Exynos 2400 Processor\nE           - listitem: \u2022 1 Year Manufacturer Warranty for Device and 6 Months for In-Box Accessories\nE         - text: \u20b949,999 \u20b989,999 44% off\nE         - img\nE         - text: Upto \u20b933,300 Off on Exchange Bank Offer\nE       - text: Page 1 of 8\nE       - navigation:\nE         - link &amp;quot;1&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=1\nE         - link &amp;quot;2&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=2\nE         - link &amp;quot;3&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=3\nE         - link &amp;quot;4&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=4\nE         - link &amp;quot;5&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=5\nE         - link &amp;quot;6&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=6\nE         - link &amp;quot;7&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=7\nE         - link &amp;quot;8&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=8\nE         - link &amp;quot;Next&amp;quot;:\nE           - /url: /search?q=Samsung+s25&amp;amp;page=2\nE       - text: Did you find what you were looking for? Yes No Reviews for Popular Mobiles\nE       - img &amp;quot;Samsung Galaxy S25 FE 5G (Jetblack, 128 GB)&amp;quot;\nE       - link &amp;quot;1. Samsung Galaxy S25 FE 5G (J... 4.5 18,188 Ratings&amp;amp;1,573 Reviews \u20b949,999 44% off&amp;quot;:\nE         - /url: /samsung-galaxy-s25-fe-5g-jetblack-128-gb/p/itm90e887b150eea?pid=MOBHQCH6FPTX5FZ2&amp;amp;marketplace=FLIPKART&amp;amp;ov_redirect=true\nE         - text: 1. Samsung Galaxy S25 FE 5G (J... 4.5\nE         - img\nE         - text: 18,188 Ratings&amp;amp;1,573 Reviews \u20b949,999 44% off\nE       - list:\nE         - listitem: 8 GB RAM | 128 GB ROM\nE         - listitem: 17.02 cm (6.7 inch) Full HD+ Display\nE         - listitem: 50MP + 12MP + 8MP | 12MP Front Camera\nE       - text: Most Helpful Review 5\nE       - img\nE       - paragraph: Excellent\nE       - text: Camera is great 10/10 Battery is average but it&amp;#x27;s okay because charging is superfast so overall 8/10 Display 10/10 Performance 9/10(it heat sometimes) Build ... Read full review\nE       - paragraph: Kushagra Singh\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: 5 months ago\nE       - text: Recent Review 5\nE       - img\nE       - paragraph: Awesome\nE       - text: Good phone but very bad delivery experience\nE       - paragraph: Muhasin Raza\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: Today\nE       - img &amp;quot;Samsung Galaxy S25 Edge 5G (Titanium Jetblack, 256 GB)&amp;quot;\nE       - link &amp;quot;2. Samsung Galaxy S25 Edge 5G ... 4.6 611 Ratings&amp;amp;74 Reviews \u20b989,999 18% off&amp;quot;:\nE         - /url: /samsung-galaxy-s25-edge-5g-titanium-jetblack-256-gb/p/itmc91f3f202a90f?pid=MOBHBXJHFGGJFW5C&amp;amp;marketplace=FLIPKART&amp;amp;ov_redirect=true\nE         - text: 2. Samsung Galaxy S25 Edge 5G ... 4.6\nE         - img\nE         - text: 611 Ratings&amp;amp;74 Reviews \u20b989,999 18% off\nE       - list:\nE         - listitem: 12 GB RAM | 256 GB ROM\nE         - listitem: 16.91 cm (6.657 inch) Quad HD+ Display\nE         - listitem: 200MP + 12MP | 12MP Front Camera\nE       - text: Most Helpful Review 5\nE       - img\nE       - paragraph: Super!\nE       - text: Just looking woww... Performance also nice..\nE       - paragraph: sudesh jogale\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: Oct, 2025\nE       - text: Recent Review 5\nE       - img\nE       - paragraph: Terrific\nE       - text: Good value for money deal\nE       - paragraph: Shailesh Lohakare\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: 30 days ago\nE       - img &amp;quot;Samsung Galaxy S25 Ultra 5G (Titanium Silverblue, 1024 GB)&amp;quot;\nE       - link &amp;quot;3. Samsung Galaxy S25 Ultra 5G... 4.6 6,068 Ratings&amp;amp;499 Reviews \u20b91,65,999&amp;quot;:\nE         - /url: /samsung-galaxy-s25-ultra-5g-titanium-silverblue-1024-gb/p/itm7d0e1ef71672e?pid=MOBH8K8UFSUDUUZZ&amp;amp;marketplace=FLIPKART&amp;amp;ov_redirect=true\nE         - text: 3. Samsung Galaxy S25 Ultra 5G... 4.6\nE         - img\nE         - text: 6,068 Ratings&amp;amp;499 Reviews \u20b91,65,999\nE       - list:\nE         - listitem: 12 GB RAM | 1024 GB ROM\nE         - listitem: 17.53 cm (6.9 inch) Quad HD+ Display\nE         - listitem: 200MP + 50MP + 50MP + 10MP | 12MP Front Camera\nE       - text: Most Helpful Review 5\nE       - img\nE       - paragraph: Terrific\nE       - text: Excellent Product...I just loved it \u2764\ufe0f\nE       - paragraph: Khairul Anam\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: Feb, 2025\nE       - text: Recent Review 5\nE       - img\nE       - paragraph: Wonderful\nE       - text: Super phone Great bettery Great performance\nE       - paragraph: Flipkart Customer\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: Today\nE       - img &amp;quot;Samsung Galaxy S25 Plus 5G (Silver Shadow, 256 GB)&amp;quot;\nE       - link &amp;quot;4. Samsung Galaxy S25 Plus 5G ... 4.6 1,787 Ratings&amp;amp;206 Reviews \u20b973,499 26% off&amp;quot;:\nE         - /url: /samsung-galaxy-s25-plus-5g-silver-shadow-256-gb/p/itm8d76a9b476932?pid=MOBH8K8UJTZZN7WZ&amp;amp;marketplace=FLIPKART&amp;amp;ov_redirect=true\nE         - text: 4. Samsung Galaxy S25 Plus 5G ... 4.6\nE         - img\nE         - text: 1,787 Ratings&amp;amp;206 Reviews \u20b973,499 26% off\nE       - list:\nE         - listitem: 12 GB RAM | 256 GB ROM\nE         - listitem: 17.02 cm (6.7 inch) Quad HD+ Display\nE         - listitem: 50MP + 10MP + 12MP | 12MP Front Camera\nE       - text: Most Helpful Review 5\nE       - img\nE       - paragraph: Wonderful\nE       - text: The look and feel of the phone is so good!\nE       - paragraph: Rishab Kar Chaudhuri\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: 10 months ago\nE       - text: Recent Review 1\nE       - img\nE       - paragraph: Useless product\nE       - text: Mobile is getting hang and frequently getting Switched off automatically.\nE       - paragraph: Dhananjay Gadhave\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: 22 days ago\nE       - img &amp;quot;Samsung Galaxy S25 5G Snapdragon (Mint, 128 GB)&amp;quot;\nE       - link &amp;quot;5. Samsung Galaxy S25 5G Snapd... 4.6 23,832 Ratings&amp;amp;2,077 Reviews \u20b965,999 37% off&amp;quot;:\nE         - /url: /samsung-galaxy-s25-5g-snapdragon-mint-128-gb/p/itmce254cb90f8d4?pid=MOBHQDMKZEFNNVW2&amp;amp;marketplace=FLIPKART&amp;amp;ov_redirect=true\nE         - text: 5. Samsung Galaxy S25 5G Snapd... 4.6\nE         - img\nE         - text: 23,832 Ratings&amp;amp;2,077 Reviews \u20b965,999 37% off\nE       - list:\nE         - listitem: 12 GB RAM | 128 GB ROM\nE         - listitem: 15.75 cm (6.2 inch) Full HD+ Display\nE         - listitem: 50MP + 10MP + 12MP | 12MP Front Camera\nE       - text: Most Helpful Review 5\nE       - img\nE       - paragraph: Just wow!\nE       - text: Camera- Almost Perfect. Battery - just awesome it&amp;#x27;s too much for social media usage and calls and stuff like that single charge will last whole day. Design... Read full review\nE       - paragraph: Aarush patil\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: Jun, 2025\nE       - text: Recent Review 5\nE       - img\nE       - paragraph: Must buy!\nE       - text: Super! Phone value for money\nE       - paragraph: Naveen Dhiman\nE       - img\nE       - paragraph: Certified Buyer\nE       - paragraph: Today\nE       - contentinfo:\nE         - text: ABOUT\nE         - link &amp;quot;Contact Us&amp;quot;:\nE           - /url: /helpcentre?otracker=footer_navlinks\nE         - link &amp;quot;About Us&amp;quot;:\nE           - /url: https://corporate.flipkart.net/corporate-home\nE         - link &amp;quot;Careers&amp;quot;:\nE           - /url: https://www.flipkartcareers.com/?otracker=footer_navlinks\nE         - link &amp;quot;Flipkart Stories&amp;quot;:\nE           - /url: http://stories.flipkart.com/?otracker=footer_navlinks\nE         - link &amp;quot;Press&amp;quot;:\nE           - /url: http://stories.flipkart.com/category/top-stories/news/\nE         - link &amp;quot;Corporate Information&amp;quot;:\nE           - /url: /corporate-information\nE         - text: GROUP COMPANIES\nE         - link &amp;quot;Myntra&amp;quot;:\nE           - /url: https://www.myntra.com/\nE         - link &amp;quot;Cleartrip&amp;quot;:\nE           - /url: https://www.cleartrip.com/\nE         - link &amp;quot;Shopsy&amp;quot;:\nE           - /url: https://www.shopsy.in/\nE         - text: HELP\nE         - link &amp;quot;Payments&amp;quot;:\nE           - /url: /pages/payments\nE         - link &amp;quot;Shipping&amp;quot;:\nE           - /url: /pages/shipping\nE         - link &amp;quot;Cancellation &amp;amp; Returns&amp;quot;:\nE           - /url: /helpcentre?catalog=55c9c6edb000002e002c1701&amp;amp;view=CATALOG\nE         - link &amp;quot;FAQ&amp;quot;:\nE           - /url: /helpcentre?catalog=55c9c8e2b0000023002c1702&amp;amp;view=CATALOG\nE         - text: CONSUMER POLICY\nE         - link &amp;quot;Cancellation &amp;amp; Returns&amp;quot;:\nE           - /url: /pages/returnpolicy?otracker=footer_navlinks\nE         - link &amp;quot;Terms Of Use&amp;quot;:\nE           - /url: /pages/terms?otracker=footer_navlinks\nE         - link &amp;quot;Security&amp;quot;:\nE           - /url: /pages/paymentsecurity?otracker=footer_navlinks\nE         - link &amp;quot;Privacy&amp;quot;:\nE           - /url: /pages/privacypolicy?otracker=footer_navlinks\nE         - link &amp;quot;Sitemap&amp;quot;:\nE           - /url: /sitemap?otracker=footer_navlinks\nE         - link &amp;quot;Grievance Redressal&amp;quot;:\nE           - /url: /pages/grievance-redressal-mechanism?otracker=footer_navlinks\nE         - link &amp;quot;EPR Compliance&amp;quot;:\nE           - /url: /pages/ewaste-compliance-tnc?otracker=footer_navlinks\nE         - link &amp;quot;FSSAI Food Safety Connect App&amp;quot;:\nE           - /url: https://fssai.gov.in/cms/food-safety-connect.php\nE         - text: &amp;quot;Mail Us:&amp;quot;\nE         - paragraph: Flipkart Internet Private Limited,\nE         - paragraph: Buildings Alyssa, Begonia &amp;amp;\nE         - paragraph: Clove Embassy Tech Village,\nE         - paragraph: Outer Ring Road, Devarabeesanahalli Village,\nE         - paragraph: Bengaluru, 560103,\nE         - paragraph: Karnataka, India\nE         - text: Social\nE         - link:\nE           - /url: https://www.facebook.com/flipkart\nE           - img\nE         - link:\nE           - /url: https://www.twitter.com/flipkart\nE           - img\nE         - link:\nE           - /url: https://www.youtube.com/flipkart\nE           - img\nE         - link:\nE           - /url: https://www.instagram.com/flipkart\nE           - img\nE         - text: &amp;quot;Registered Office Address:&amp;quot;\nE         - paragraph: Flipkart Internet Private Limited,\nE         - paragraph: Buildings Alyssa, Begonia &amp;amp;\nE         - paragraph: Clove Embassy Tech Village,\nE         - paragraph: Outer Ring Road, Devarabeesanahalli Village,\nE         - paragraph: Bengaluru, 560103,\nE         - paragraph: Karnataka, India\nE         - paragraph: &amp;quot;CIN : U51109KA2012PTC066107&amp;quot;\nE         - paragraph:\nE           - text: &amp;quot;Telephone:&amp;quot;\nE           - link &amp;quot;044-45614700&amp;quot;:\nE             - /url: tel:044-45614700\nE           - text: /\nE           - link &amp;quot;044-67415800&amp;quot;:\nE             - /url: tel:044-67415800\nE         - img\nE         - link &amp;quot;Become a Seller&amp;quot;:\nE           - /url: https://seller.flipkart.com/?utm_source=fkwebsite&amp;amp;utm_medium=websitedirect\nE         - img\nE         - text: Advertise\nE         - img\nE         - link &amp;quot;Gift Cards&amp;quot;:\nE           - /url: /the-gift-card-store?otracker=footer_navlinks\nE         - img\nE         - link &amp;quot;Help Center&amp;quot;:\nE           - /url: /helpcentre?otracker=footer_navlinks\nE         - text: \u00a9 2007-2026 Flipkart.com\nE         - img\n\n..\\Pages\\search_page.py:12: AssertionError\n\n---------------------------- Captured stdout setup -----------------------------\n[OK] Starting browser: chromium\n[OK] Headless mode: False (headed=True)\n[INFO] Navigating to: https://www.flipkart.com/\n[TRACE] Tracing enabled - capturing screenshots and actions\n--------------------------- Captured stdout teardown ---------------------------\n[RESULT] Test &amp;#x27;test_product_page[chromium]&amp;#x27; result: [FAIL]\n[SAVE] Trace saved: reports/traces/test_product_page[chromium]_trace.zip\n[SAVE] Screenshot saved: reports/screenshots/test_product_page[chromium].png\n[ATTACH] Screenshot attached to Allure report\n[ATTACH] Video attached to Allure report\n[CLEANUP] Closing browser context and stopping Playwright...\n&#34;}], &#34;tests/test_product_search.py::test_product_search[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;tests/test_product_search.py::test_product_search[chromium]&#34;, &#34;duration&#34;: &#34;00:00:25&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_product_search.py::test_product_search[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:25&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;page = &amp;lt;Page url=&amp;#x27;https://www.flipkart.com/&amp;#x27;&amp;gt;\n\n    def test_product_search(page):\n    \n        home = HomePage(page)\n        search = SearchPage(page)\n    \n        # Step 1: Open Flipkart\n        home.open_home_page()\n    \n        # Step 2: Search iPhone 14\n        home.search_product(&amp;quot;iPhone 17&amp;quot;)\n    \n        # Step 3: Validate search results\n&amp;gt;       search.validate_search_results()\n\ntest_product_search.py:18: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;Pages.search_page.SearchPage object at 0x0000028F1B8D5E50&amp;gt;\n\n    def validate_search_results(self):\n&amp;gt;       expect(self.page).to_have_url(re.compile(r&amp;quot;[?&amp;amp;]q=iphone&amp;quot;, re.IGNORECASE))\nE       AssertionError: Page URL expected to be &amp;#x27;re.compile(&amp;#x27;[?&amp;amp;]q=iphone&amp;#x27;, re.IGNORECASE)&amp;#x27;\nE       Actual value: https://www.flipkart.com/ \nE       Call log:\nE         - Expect &amp;quot;to_have_url&amp;quot; with timeout 5000ms\nE           11 \u00d7 locator resolved to &amp;lt;html lang=&amp;quot;en-IN&amp;quot; class=&amp;quot;en-fonts-loaded useInterFont&amp;quot;&amp;gt;\u2026&amp;lt;/html&amp;gt;\nE              - unexpected value &amp;quot;https://www.flipkart.com/&amp;quot;\nE       \nE       Aria snapshot:\nE       - img &amp;quot;Image&amp;quot;\nE       - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image Image&amp;quot;:\nE         - /url: /flights-travel-uhp-at-store?marketplace=FKT\nE         - img &amp;quot;Image&amp;quot;\nE         - img &amp;quot;Image&amp;quot;\nE       - img\nE       - text: Location not set Select delivery location\nE       - img\nE       - banner:\nE         - button &amp;quot;Search for Products, Brands and More&amp;quot;:\nE           - img &amp;quot;Search Icon&amp;quot;\nE         - textbox &amp;quot;Search for Products, Brands and More&amp;quot;\nE         - link &amp;quot;Login&amp;quot;:\nE           - /url: /login?ret=/\nE           - img &amp;quot;Login&amp;quot;\nE           - text: Login\nE         - img &amp;quot;Chevron&amp;quot;\nE         - link &amp;quot;Login&amp;quot;:\nE           - /url: /login?ret=/\nE         - link &amp;quot;More&amp;quot;:\nE           - /url: &amp;quot;#&amp;quot;\nE         - img &amp;quot;Chevron&amp;quot;\nE         - link &amp;quot;Cart Cart&amp;quot;:\nE           - /url: /viewcart?marketplace=FLIPKART\nE           - img &amp;quot;Cart&amp;quot;\nE           - text: Cart\nE       - link &amp;quot;For You&amp;quot;:\nE         - /url: https://www.flipkart.com/\nE         - img\nE         - heading &amp;quot;For You&amp;quot; [level=1]\nE       - link &amp;quot;Fashion&amp;quot;:\nE         - /url: /ss-26-base-inline-at-store\nE         - img\nE         - text: Fashion\nE       - link &amp;quot;Mobiles&amp;quot;:\nE         - /url: /mobile-phones-store\nE         - img\nE         - text: Mobiles\nE       - link &amp;quot;Electronics&amp;quot;:\nE         - /url: /new-elec-clp-march-at-store\nE         - img\nE         - text: Electronics\nE       - link &amp;quot;Beauty&amp;quot;:\nE         - /url: /bpc-bau-new-inline-at-store\nE         - img\nE         - text: Beauty\nE       - link &amp;quot;Home&amp;quot;:\nE         - /url: /home-kitchen-25-at-store\nE         - img\nE         - text: Home\nE       - link &amp;quot;Appliances&amp;quot;:\nE         - /url: /tv-and-appliances-inline-ab-at-store\nE         - img\nE         - text: Appliances\nE       - link &amp;quot;Toys, baby..&amp;quot;:\nE         - /url: /toysbc-new26-inline-at-store\nE         - img\nE         - text: Toys, baby..\nE       - link &amp;quot;Food &amp;amp; Health&amp;quot;:\nE         - /url: /fnhc-2025-new-at-store\nE         - img\nE         - text: Food &amp;amp; Health\nE       - link &amp;quot;Auto Accessories&amp;quot;:\nE         - /url: /aa-2025-new-at-store\nE         - img\nE         - text: Auto Accessories\nE       - link &amp;quot;Sports &amp;amp; Fitness&amp;quot;:\nE         - /url: /sf-inline-2025-at-store\nE         - img\nE         - text: Sports &amp;amp; Fitness\nE       - link &amp;quot;Furniture&amp;quot;:\nE         - /url: /india-ka-furniture-studio-inlines-at-store\nE         - img\nE         - text: Furniture\nE       - link &amp;quot;Books&amp;quot;:\nE         - /url: /books-at-store\nE         - img\nE         - text: Books\nE       - link &amp;quot;2 Wheelers&amp;quot;:\nE         - /url: /twowheelers-at-store\nE         - img\nE         - text: 2 Wheelers\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /wedding-specials-2026-store?ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiSUFEIiwidmFsdWVUeXBlIjoiU0lOR0xFX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;nnc=J5JH1VVC2MWB_IAD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /samsung-galaxy-s25-fe-5g-jetblack-128-gb/p/itm90e887b150eea?pid=MOBHQCH6FPTX5FZ2&amp;amp;marketplace=FLIPKART&amp;amp;lid=LSTMOBHQCH6FPTX5FZ26HBEZT&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiSUFEIiwidmFsdWVUeXBlIjoiU0lOR0xFX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;nnc=YIPVIEK2TQZ5_IAD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /mivi-one-5g-green-128-gb/p/itm596121720eed0?pid=MOBHR3ZPGHBTGAUG&amp;amp;marketplace=FLIPKART&amp;amp;lid=LSTMOBHR3ZPGHBTGAUG0YU7DT&amp;amp;pageUID=1793955666327&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=E7HDQI3D5DBH_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /mens-footwear/pr?sid=osp%2Ccil&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSprandi&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=KSLGJT5F0MFK_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /eat/~cs-0jzrfupzev/pr?sid=eat&amp;amp;collection-tab-name=eatanytime&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=XLNH34E81YTX_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /google-one-at-store?ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=BWVAQTS9HNBS_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /laptops/~cs-xn8a5b3cg0/pr?sid=6bo%2Cb5g&amp;amp;collection-tab-name=Laptops&amp;amp;sort=price_asc&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=IN92437MDFDM_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /mens-footwear/pr?sid=osp%2Ccil&amp;amp;otracker=nmenu_sub_Men_0_Footwear&amp;amp;p%5B%5D=facets.brand%255B%255D%3DNew%2BBalance&amp;amp;p%5B%5D=facets.discount_range_v1%255B%255D%3D40%2525%2Bor%2Bmore&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=JYKI6BX1FRJS_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /building-materials-and-supplies/bathroom-and-kitchen-fittings/bathroom-mirrors/pr?sid=b8s%2Cecr%2Cn1g&amp;amp;p%5B%5D=facets.brand%255B%255D%3DURBAN%2BCHOICE&amp;amp;otracker=categorytree&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=VLI8IRWRJLHT_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /food-products/biscuit-cookie-and-rusk/purferme-project~brand/pr?sid=eat%2C5am&amp;amp;marketplace=FLIPKART&amp;amp;p%5B%5D=facets.brand%255B%255D%3DPurFerme%2BProject&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=KN4UBXP12C94_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /furniture/~cs-4c07lgykih/pr?sid=wwe&amp;amp;collection-tab-name=Sleepy+Head&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=MCHOND60AH3W_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - img &amp;quot;Image&amp;quot;\nE       - text: Add to your wishlist\nE       - link &amp;quot;Image CFW-shoes Min.70%&amp;quot;:\nE         - /url: /mens-footwear/mens-sports-shoes/pr?sid=osp%2Ccil%2C1cu&amp;amp;p%5B%5D=facets.price_range.from%3DMin&amp;amp;sort=popularity&amp;amp;p%5B%5D=facets.price_range.to%3D499&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWELDONE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DHOTSTYLE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBRUTON&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCOOPERWINGS&amp;amp;p%5B%5D=facets.brand%255B%255D%3DFree%2BKicks&amp;amp;p%5B%5D=facets.brand%255B%255D%3Djootiyapa&amp;amp;p%5B%5D=facets.brand%255B%255D%3DPennen&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBOKZZON&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSPOTWALK&amp;amp;p%5B%5D=facets.brand%255B%255D%3DXppo&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWINGSCRAFT&amp;amp;p%5B%5D=facets.brand%255B%255D%3DTrendmode&amp;amp;p%5B%5D=facets.brand%255B%255D%3DANGO&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBirde&amp;amp;p%5B%5D=facets.brand%255B%255D%3DPennon&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLNT%2BFASHION&amp;amp;p%5B%5D=facets.brand%255B%255D%3Dhouse%2Bof%2Bcommon&amp;amp;p%5B%5D=facets.brand%255B%255D%3DHotspot&amp;amp;p%5B%5D=facets.brand%255B%255D%3DDRACKFOOT&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSKYMORE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DNOBELITE&amp;amp;p%5B%5D=facets.brand%255B%255D%3Daadi&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCamfoot&amp;amp;p%5B%5D=facets.brand%255B%255D%3DURBANBOX&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLEATHERKRAFT&amp;amp;p%5B%5D=facets.brand%255B%255D%3DFASH%2BN%2BFOOT&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWorld%2BWear%2BFootwear&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCALCADOS&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSender&amp;amp;p%5B%5D=facets.brand%255B%255D%3DAxter&amp;amp;p%5B%5D=facets.brand%255B%255D%3DGREVON&amp;amp;p%5B%5D=facets.brand%255B%255D%3DJut%2BFire&amp;amp;p%5B%5D=facets.brand%255B%255D%3DRoamra&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSCLERE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSHOEFLY&amp;amp;p%5B%5D=facets.brand%255B%255D%3DAircum&amp;amp;p%5B%5D=facets.brand%255B%255D%3DA-CLASS&amp;amp;p%5B%5D=facets.brand%255B%255D%3DROASTER&amp;amp;p%5B%5D=facets.brand%255B%255D%3DKANEGGYE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DJOSMOS&amp;amp;p%5B%5D=facets.brand%255B%255D%3DGenial&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBegone&amp;amp;p%5B%5D=facets.brand%255B%255D%3DMagnolia&amp;amp;p%5B%5D=facets.brand%255B%255D%3DELASA&amp;amp;p%5B%5D=facets.brand%255B%255D%3DRoyal%2BCruzz&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWALKAROO&amp;amp;p%5B%5D=facets.brand%255B%255D%3DKzaara&amp;amp;p%5B%5D=facets.brand%255B%255D%3DFootox&amp;amp;p%5B%5D=facets.brand%255B%255D%3DEarton&amp;amp;p%5B%5D=facets.brand%255B%255D%3Dontour&amp;amp;p%5B%5D=facets.brand%255B%255D%3DStride%2BUp&amp;amp;p%5B%5D=facets.brand%255B%255D%3DTR&amp;amp;p%5B%5D=facets.brand%255B%255D%3DTying&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWOCMEC&amp;amp;p%5B%5D=facets.brand%255B%255D%3DVECHLO&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWtrizak&amp;amp;p%5B%5D=facets.brand%255B%255D%3Dazalya&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSIMATA&amp;amp;p%5B%5D=facets.brand%255B%255D%3DRapidBox&amp;amp;p%5B%5D=facets.brand%255B%255D%3DM7%2BBy%2BMetronaut&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLANCER&amp;amp;p%5B%5D=facets.brand%255B%255D%3DDUNKASTON&amp;amp;p%5B%5D=facets.brand%255B%255D%3DFLIPJONES&amp;amp;p%5B%5D=facets.brand%255B%255D%3DDanma&amp;amp;p%5B%5D=facets.brand%255B%255D%3DGroofer&amp;amp;p%5B%5D=facets.brand%255B%255D%3DK%2527%2BFootlance&amp;amp;p%5B%5D=facets.brand%255B%255D%3DAirland&amp;amp;p%5B%5D=facets.brand%255B%255D%3DAirhype&amp;amp;p%5B%5D=facets.brand%255B%255D%3DAanbaan&amp;amp;p%5B%5D=facets.discount_range_v1%255B%255D%3D70%2525%2Bor%2Bmore&amp;amp;hpid=4Tl3c2OJXUsWH3fCAo6opqp7_Hsxr70nj65vMAAFKlc%3D&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InZhbHVlQ2FsbG91dCI6eyJtdWx0aVZhbHVlZEF0dHJpYnV0ZSI6eyJrZXkiOiJ2YWx1ZUNhbGxvdXQiLCJpbmZlcmVuY2VUeXBlIjoiVkFMVUVfQ0FMTE9VVCIsInZhbHVlcyI6WyJNaW4uNzAlIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fSwiaGVyb1BpZCI6eyJzaW5nbGVWYWx1ZUF0dHJpYnV0ZSI6eyJrZXkiOiJoZXJvUGlkIiwiaW5mZXJlbmNlVHlwZSI6IlBJRCIsInZhbHVlIjoiU0hPSEVCNjhTOFpZV1lFTiIsInZhbHVlVHlwZSI6IlNJTkdMRV9WQUxVRUQifX0sInRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkNGVy1zaG9lcy1NaW4uNzAiXSwidmFsdWVUeXBlIjoiTVVMVElfVkFMVUVEIn19fX19&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: CFW-shoes Min.70%\nE       - link &amp;quot;Image boAt, realme, Mivi &amp;amp; more Min 50% Off&amp;quot;:\nE         - /url: /audio-video/pr?sid=0pm&amp;amp;p%5B%5D=facets.discount_range_v1%255B%255D%3D50%2525%2Bor%2Bmore&amp;amp;hpid=w2BGimYwATZXfn_vEkn1oap7_Hsxr70nj65vMAAFKlc%3D&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InZhbHVlQ2FsbG91dCI6eyJtdWx0aVZhbHVlZEF0dHJpYnV0ZSI6eyJrZXkiOiJ2YWx1ZUNhbGxvdXQiLCJpbmZlcmVuY2VUeXBlIjoiVkFMVUVfQ0FMTE9VVCIsInZhbHVlcyI6WyJNaW4gNTAlIE9mZiJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX0sImhlcm9QaWQiOnsic2luZ2xlVmFsdWVBdHRyaWJ1dGUiOnsia2V5IjoiaGVyb1BpZCIsImluZmVyZW5jZVR5cGUiOiJQSUQiLCJ2YWx1ZSI6IkFDQ0dTOVpNR1FaSDRGWkYiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19LCJ0aXRsZSI6eyJtdWx0aVZhbHVlZEF0dHJpYnV0ZSI6eyJrZXkiOiJ0aXRsZSIsImluZmVyZW5jZVR5cGUiOiJUSVRMRSIsInZhbHVlcyI6WyJCZXN0IE9mIEhlYWRwaG9uZXMgJiBTcGVha2VycyJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: boAt, realme, Mivi &amp;amp; more Min 50% Off\nE       - link &amp;quot;Image Buy now Min 70 Off&amp;quot;:\nE         - /url: /watches/wrist-watches/pr?sid=r18%2Cf13&amp;amp;p%5B%5D=facets.brand%255B%255D%3DShocknshop&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCurren&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWristy&amp;amp;p%5B%5D=facets.brand%255B%255D%3DFOGG&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCHARLIEKEEN&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLOUIS%2BDEVIN&amp;amp;p%5B%5D=facets.brand%255B%255D%3Dluxurit&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLOIS%2BCARON&amp;amp;p%5B%5D=facets.brand%255B%255D%3DANALOGUE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DRUSTET&amp;amp;p%5B%5D=facets.brand%255B%255D%3DAcnos&amp;amp;p%5B%5D=facets.brand%255B%255D%3DIIK%2BCollection&amp;amp;p%5B%5D=facets.brand%255B%255D%3DIIK%2BCollections&amp;amp;p%5B%5D=facets.brand%255B%255D%3DPROVOGUE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DMATRIX&amp;amp;p%5B%5D=facets.brand%255B%255D%3DTime%2BMatrix&amp;amp;p%5B%5D=facets.brand%255B%255D%3DKILLER&amp;amp;p%5B%5D=facets.brand%255B%255D%3DPIRASO&amp;amp;p%5B%5D=facets.brand%255B%255D%3DEDDY%2BHAGER&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLIMESTONE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLORENZ&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSKMEI&amp;amp;p%5B%5D=facets.brand%255B%255D%3DTIMEWEAR&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCasado&amp;amp;p%5B%5D=facets.brand%255B%255D%3DMETRONAUT&amp;amp;p%5B%5D=facets.brand%255B%255D%3DM7%2BBy%2BMetronaut&amp;amp;p%5B%5D=facets.brand%255B%255D%3DABREXO&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSeptem&amp;amp;p%5B%5D=facets.brand%255B%255D%3DNAVlFORCE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DNAVIFORCE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DOVERFLY&amp;amp;p%5B%5D=facets.brand%255B%255D%3DNIBOSI&amp;amp;p%5B%5D=facets.brand%255B%255D%3DV2A&amp;amp;p%5B%5D=facets.brand%255B%255D%3DAlix&amp;amp;p%5B%5D=facets.brand%255B%255D%3DKitcone&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLongbo&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBruno%2BMilano&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBENYAR&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSylvi&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBenling&amp;amp;p%5B%5D=facets.brand%255B%255D%3DOLEVS&amp;amp;p%5B%5D=facets.brand%255B%255D%3DYHMEI&amp;amp;p%5B%5D=facets.ideal_for%255B%255D%3DMen&amp;amp;p%5B%5D=facets.discount_range_v1%255B%255D%3D70%2525%2Bor%2Bmore&amp;amp;param=678778&amp;amp;hpid=YYa1MSz2uhcyTWMWAjIcC6p7_Hsxr70nj65vMAAFKlc%3D&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InZhbHVlQ2FsbG91dCI6eyJtdWx0aVZhbHVlZEF0dHJpYnV0ZSI6eyJrZXkiOiJ2YWx1ZUNhbGxvdXQiLCJpbmZlcmVuY2VUeXBlIjoiVkFMVUVfQ0FMTE9VVCIsInZhbHVlcyI6WyJNaW4gNzAgT2ZmIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fSwiaGVyb1BpZCI6eyJzaW5nbGVWYWx1ZUF0dHJpYnV0ZSI6eyJrZXkiOiJoZXJvUGlkIiwiaW5mZXJlbmNlVHlwZSI6IlBJRCIsInZhbHVlIjoiV0FUSDY1UlZCVEhaSkJVVyIsInZhbHVlVHlwZSI6IlNJTkdMRV9WQUxVRUQifX0sInRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIk1lbiBXYXRjaCBhdCBNaW4gNzAgT2ZmIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Buy now Min 70 Off\nE       - link &amp;quot;Image Men&amp;#x27;s casual shoes... Min. 50% Off&amp;quot;:\nE         - /url: /mens-footwear/pr?sid=osp%2Ccil&amp;amp;p%5B%5D=facets.brand%255B%255D%3DFLITE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBata&amp;amp;p%5B%5D=facets.brand%255B%255D%3DRED%2BTAPE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSparx&amp;amp;p%5B%5D=facets.brand%255B%255D%3DU.S.%2BPOLO%2BASSN.&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCROCS&amp;amp;p%5B%5D=facets.brand%255B%255D%3Daction&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWOODLAND&amp;amp;p%5B%5D=facets.brand%255B%255D%3DNeemans&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLIBERTY&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBAHAMAS&amp;amp;p%5B%5D=facets.brand%255B%255D%3DPROVOGUE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DJACK%2B%2526%2BJONES&amp;amp;p%5B%5D=facets.brand%255B%255D%3DKILLER&amp;amp;p%5B%5D=facets.brand%255B%255D%3DRoadster&amp;amp;p%5B%5D=facets.brand%255B%255D%3DUnited%2BColors%2Bof%2BBenetton&amp;amp;p%5B%5D=facets.brand%255B%255D%3DAbros&amp;amp;p%5B%5D=facets.brand%255B%255D%3DRelaxo&amp;amp;p%5B%5D=facets.brand%255B%255D%3DHUSH%2BPUPPIES&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWALKAROO&amp;amp;p%5B%5D=facets.brand%255B%255D%3DBEWAKOOF&amp;amp;p%5B%5D=facets.brand%255B%255D%3DRED%2BCHIEF&amp;amp;p%5B%5D=facets.brand%255B%255D%3DHUMMEL&amp;amp;p%5B%5D=facets.brand%255B%255D%3DMOCHI&amp;amp;p%5B%5D=facets.brand%255B%255D%3DThe%2BSouled%2BStore&amp;amp;p%5B%5D=facets.brand%255B%255D%3DMETRO&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWROGN&amp;amp;p%5B%5D=facets.brand%255B%255D%3DFCUK&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLOUIS%2BPHILIPPE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DFLYING%2BMACHINE&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLEVI%2527S&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCLARKS&amp;amp;p%5B%5D=facets.brand%255B%255D%3DMast%2B%2526%2BHarbour&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSpykar&amp;amp;p%5B%5D=facets.brand%255B%255D%3DPro&amp;amp;p%5B%5D=facets.brand%255B%255D%3DHouse%2Bof%2BPataudi&amp;amp;p%5B%5D=facets.brand%255B%255D%3DTeakwood%2BLeathers&amp;amp;p%5B%5D=facets.brand%255B%255D%3DWildcraft&amp;amp;p%5B%5D=facets.brand%255B%255D%3DALDO&amp;amp;p%5B%5D=facets.brand%255B%255D%3DLEE%2BCOOPER&amp;amp;p%5B%5D=facets.brand%255B%255D%3DSOLETHREADS%2BREBEL&amp;amp;p%5B%5D=facets.brand%255B%255D%3DDUCATI&amp;amp;p%5B%5D=facets.discount_range_v1%255B%255D%3D50%2525%2Bor%2Bmore&amp;amp;param=9876&amp;amp;hpid=L5rspefnn2XY2B1vlEGn36p7_Hsxr70nj65vMAAFKlc%3D&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InZhbHVlQ2FsbG91dCI6eyJtdWx0aVZhbHVlZEF0dHJpYnV0ZSI6eyJrZXkiOiJ2YWx1ZUNhbGxvdXQiLCJpbmZlcmVuY2VUeXBlIjoiVkFMVUVfQ0FMTE9VVCIsInZhbHVlcyI6WyJNaW4uIDUwJSBPZmYiXSwidmFsdWVUeXBlIjoiTVVMVElfVkFMVUVEIn19LCJoZXJvUGlkIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6Imhlcm9QaWQiLCJpbmZlcmVuY2VUeXBlIjoiUElEIiwidmFsdWUiOiJTSE9HRTk1QlZZOFEyNlZSIiwidmFsdWVUeXBlIjoiU0lOR0xFX1ZBTFVFRCJ9fSwidGl0bGUiOnsibXVsdGlWYWx1ZWRBdHRyaWJ1dGUiOnsia2V5IjoidGl0bGUiLCJpbmZlcmVuY2VUeXBlIjoiVElUTEUiLCJ2YWx1ZXMiOlsiQWN0aW9uLCBBYnJvcy4uLiJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Men&amp;#x27;s casual shoes... Min. 50% Off\nE       - img &amp;quot;Image&amp;quot;\nE       - text: Value 365\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /product/p/itme?pid=AFRHPYY8MZZZSYUJ&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /home-furnishing/~cs-u5bb47cc70/pr?sid=jra&amp;amp;collection-tab-name=Slip+Cover&amp;amp;sort=popularity&amp;amp;p%5B%5D=facets.price_range.from%3DMin&amp;amp;p%5B%5D=facets.price_range.to%3D799&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /upp/~cs-5kg8jyvx9e/pr?sid=upp&amp;amp;collection-tab-name=Cookware+Set&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /clothing-and-accessories/topwear/tshirts/pr?sid=clo%2Cash%2Cank&amp;amp;p%5B%5D=facets.ideal_for%255B%255D%3DWomen&amp;amp;p%5B%5D=facets.price_range.from%3DMin&amp;amp;p%5B%5D=facets.price_range.to%3D349&amp;amp;param=3473463464&amp;amp;offer=vl%3A05a8940617&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /home-furnishing/bed-linen-blankets/bedsheets/~cs-l27kr02qm0/pr?sid=jra%2Cknw%2Cqcw&amp;amp;collection-tab-name=Bedsheets&amp;amp;p%5B%5D=facets.price_range.from%3DMin&amp;amp;p%5B%5D=facets.price_range.to%3D699&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /product/p/itme?pid=ICTHE29NUMTDDPR6&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /jra/~cs-lwl15bvhge/pr?sid=jra&amp;amp;collection-tab-name=Pillows&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /kitchen-cookware-serveware/~cs-0qeb8hnvdk/pr?sid=upp&amp;amp;collection-tab-name=Containers&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /product/p/itme?pid=IRNH769YHTZGPUMN&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /upp/~cs-4idhit832l/pr?sid=upp&amp;amp;collection-tab-name=Steamer&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /musical-instruments/studiostage-equipment-accessories/microphone/pr?sid=ypu%2Calc%2C3d4&amp;amp;marketplace=FLIPKART&amp;amp;p%5B%5D=facets.discount_range_v1%255B%255D%3D50%2525%2Bor%2Bmore&amp;amp;p%5B%5D=facets.rating%255B%255D%3D4%25E2%2598%2585%2B%2526%2Babove&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /health-personal-care-appliances/~cs-7vfjgzbgo0/pr?sid=zlw&amp;amp;collection-tab-name=Value+365&amp;amp;p%5B%5D=facets.brand%255B%255D%3DHAVELLS&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - button:\nE         - img\nE       - text: Brands in Spotlight\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /wakefit-shapesense-orthopedic-classic-memory-foam-6-inch-single-high-resilience-hr-mattress/p/itmc391c70e1ff2f?pid=ACCHG9G6GGGNGV5Z&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=J35ABFDLWV28_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /mens-footwear/pr?sid=osp%2Ccil&amp;amp;otracker=nmenu_sub_Men_0_Footwear&amp;amp;p%5B%5D=facets.brand%255B%255D%3DJQR&amp;amp;p%5B%5D=facets.discount_range_v1%255B%255D%3D50%2525%2Bor%2Bmore&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=3XWCAKX53RA7_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /goboult-y1-anc-72hr-battery-quad-mic-enc-app-support-dual-pairing-45ms-latency-6-0v-bluetooth/p/itm8897e5780b06b?pid=ACCHSCTMBDXYKNUE&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=TKV5VOJK9B7Q_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /beauty-and-grooming/hair-care-and-accessory/hair-care/hair-treatment/cincinnus~brand/pr?sid=g9b%2Clcf%2Cqqm%2C331&amp;amp;marketplace=FLIPKART&amp;amp;p%5B%5D=facets.brand%255B%255D%3Dcincinnus&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=HDJZX92B1OC4_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /health-care/home-medicines/general-wellness/ayurvedic/primevita~brand/pr?sid=hlc%2Cah4%2Ciav%2Cjnk&amp;amp;marketplace=FLIPKART&amp;amp;p%5B%5D=facets.brand%255B%255D%3DPRIMEVITA&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=KSEHO1NU1YHG_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image&amp;quot;:\nE         - /url: /food-products/dry-fruit-nut-seed/edible-seed/cowberry~brand/pr?sid=eat%2Cltb%2Cjlc&amp;amp;marketplace=FLIPKART&amp;amp;p%5B%5D=facets.brand%255B%255D%3DCOWBERRY&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InNvdXJjZUNvbnRlbnRUeXBlIjp7InNpbmdsZVZhbHVlQXR0cmlidXRlIjp7ImtleSI6InNvdXJjZUNvbnRlbnRUeXBlIiwiaW5mZXJlbmNlVHlwZSI6IlNDVCIsInZhbHVlIjoiQUQiLCJ2YWx1ZVR5cGUiOiJTSU5HTEVfVkFMVUVEIn19fX19&amp;amp;nnc=CROELMJR6RLS_AD&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE       - link &amp;quot;Image Credit Card&amp;quot;:\nE         - /url: https://www.flipkart.com/fpg/cbc/store-page?productType=CC&amp;amp;utm_source=Allcat_OTA&amp;amp;utm_source_context=Allcat_nav&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkNyZWRpdCBDYXJkIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Credit Card\nE       - link &amp;quot;Image Flipkart EMI&amp;quot;:\nE         - /url: https://www.flipkart.com/rv/fpg/cfa/ntb/ce?emiType=cfa-term-loan&amp;amp;productCode=CREDIT_MARKETPLACE&amp;amp;utmSource=ADS&amp;amp;utmContext=FKEMI_Nav&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkZsaXBrYXJ0IEVNSSJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Flipkart EMI\nE       - link &amp;quot;Image Pay Later&amp;quot;:\nE         - /url: https://www.flipkart.com/rv/fpg/bnpl?utmSource=fk-fpl107&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlBheSBMYXRlciJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Pay Later\nE       - link &amp;quot;Image Loans&amp;quot;:\nE         - /url: https://www.flipkart.com/sumo-3p/pl/pages/journey?utm_source=Home_Page&amp;amp;utm_campaign=Nav_Base&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkxvYW5zIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Loans\nE       - link &amp;quot;Image Travel&amp;quot;:\nE         - /url: https://www.flipkart.com/travel/flights?param=Travel-Program-NAV-Flights-booknow&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlRyYXZlbCJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Travel\nE       - link &amp;quot;Image Earn Now&amp;quot;:\nE         - /url: /creator/profile?ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkVhcm4gTm93Il0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Earn Now\nE       - link &amp;quot;Image Gift Cards&amp;quot;:\nE         - /url: /gift-card-at-store?param=7654567&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkdpZnQgQ2FyZHMiXSwidmFsdWVUeXBlIjoiTVVMVElfVkFMVUVEIn19fX19&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Gift Cards\nE       - link &amp;quot;Image 2 Wheelers&amp;quot;:\nE         - /url: /7dk/0aj/~cs-l0abbrtwvr/pr?sid=7dk%2C0aj&amp;amp;collection-tab-name=Top+Deals+on+Bikes+and+Scooters&amp;amp;pageCriteria=default&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIjIgV2hlZWxlcnMiXSwidmFsdWVUeXBlIjoiTVVMVElfVkFMVUVEIn19fX19&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: 2 Wheelers\nE       - link &amp;quot;Image Sell Phone&amp;quot;:\nE         - /url: /reset-sell-store?param=3382&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlNlbGwgUGhvbmUiXSwidmFsdWVUeXBlIjoiTVVMVElfVkFMVUVEIn19fX19&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Sell Phone\nE       - link &amp;quot;Image Software&amp;quot;:\nE         - /url: /elc-digital-games-software-at-store?ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlNvZnR3YXJlICYgR2FtZXMiXSwidmFsdWVUeXBlIjoiTVVMVElfVkFMVUVEIn19fX19&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlNvZnR3YXJlIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Software\nE       - link &amp;quot;Image SuperCoin&amp;quot;:\nE         - /url: /supercoin?param=76523&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlN1cGVyQ29pbiJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: SuperCoin\nE       - link &amp;quot;Image For GenZ&amp;quot;:\nE         - /url: /ls-aw-genz-women-non-inline-at-store?param=45678987643&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkZvciBHZW5aIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: For GenZ\nE       - link &amp;quot;Image Originals&amp;quot;:\nE         - /url: /flipkart-originals-large-at-store?ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIk9yaWdpbmFscyJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Originals\nE       - link &amp;quot;Image Pay&amp;quot;:\nE         - /url: /flipkart-pay-at-store?ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlBheSJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Pay\nE       - link &amp;quot;Image Vouchers&amp;quot;:\nE         - /url: /bv1-gift-card-at-store?param=4264&amp;amp;pageUID=1791823084665&amp;amp;param=787193&amp;amp;ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlZvdWNoZXJzIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Vouchers\nE       - link &amp;quot;Image Next Gen&amp;quot;:\nE         - /url: /next-gen-brands-at-store?ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIk5leHQgR2VuIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&amp;amp;BU=Mixed\nE         - img &amp;quot;Image&amp;quot;\nE         - text: Next Gen\nE       - button:\nE         - img\nE       - text: Hang on, loading content Flipkart - Your go-to place for Online Shopping +\nE       - contentinfo:\nE         - text: ABOUT\nE         - link &amp;quot;Contact Us&amp;quot;:\nE           - /url: /helpcentre?otracker=footer_navlinks\nE         - link &amp;quot;About Us&amp;quot;:\nE           - /url: https://corporate.flipkart.net/corporate-home\nE         - link &amp;quot;Careers&amp;quot;:\nE           - /url: https://www.flipkartcareers.com/?otracker=footer_navlinks\nE         - link &amp;quot;Flipkart Stories&amp;quot;:\nE           - /url: http://stories.flipkart.com/?otracker=footer_navlinks\nE         - link &amp;quot;Press&amp;quot;:\nE           - /url: http://stories.flipkart.com/category/top-stories/news/\nE         - link &amp;quot;Corporate Information&amp;quot;:\nE           - /url: /corporate-information\nE         - text: GROUP COMPANIES\nE         - link &amp;quot;Myntra&amp;quot;:\nE           - /url: https://www.myntra.com/\nE         - link &amp;quot;Cleartrip&amp;quot;:\nE           - /url: https://www.cleartrip.com/\nE         - link &amp;quot;Shopsy&amp;quot;:\nE           - /url: https://www.shopsy.in\nE         - text: HELP\nE         - link &amp;quot;Payments&amp;quot;:\nE           - /url: /pages/payments\nE         - link &amp;quot;Shipping&amp;quot;:\nE           - /url: /pages/shipping\nE         - link &amp;quot;Cancellation &amp;amp; Returns&amp;quot;:\nE           - /url: /helpcentre?catalog=55c9c6edb000002e002c1701&amp;amp;view=CATALOG\nE         - link &amp;quot;FAQ&amp;quot;:\nE           - /url: /helpcentre?catalog=55c9c8e2b0000023002c1702&amp;amp;view=CATALOG\nE         - text: CONSUMER POLICY\nE         - link &amp;quot;Cancellation &amp;amp; Returns&amp;quot;:\nE           - /url: /pages/returnpolicy?otracker=footer_navlinks\nE         - link &amp;quot;Terms Of Use&amp;quot;:\nE           - /url: /pages/terms?otracker=footer_navlinks\nE         - link &amp;quot;Security&amp;quot;:\nE           - /url: /pages/paymentsecurity?otracker=footer_navlinks\nE         - link &amp;quot;Privacy&amp;quot;:\nE           - /url: /pages/privacypolicy?otracker=footer_navlinks\nE         - link &amp;quot;Sitemap&amp;quot;:\nE           - /url: /sitemap?otracker=footer_navlinks\nE         - link &amp;quot;Grievance Redressal&amp;quot;:\nE           - /url: /pages/grievance-redressal-mechanism?otracker=footer_navlinks\nE         - link &amp;quot;EPR Compliance&amp;quot;:\nE           - /url: /pages/ewaste-compliance-tnc?otracker=footer_navlinks\nE         - link &amp;quot;FSSAI Food Safety Connect App&amp;quot;:\nE           - /url: https://fssai.gov.in/cms/food-safety-connect.php\nE         - text: &amp;quot;Mail Us:&amp;quot;\nE         - paragraph: Flipkart Internet Private Limited,\nE         - paragraph: Buildings Alyssa, Begonia &amp;amp;\nE         - paragraph: Clove Embassy Tech Village,\nE         - paragraph: Outer Ring Road, Devarabeesanahalli Village,\nE         - paragraph: Bengaluru, 560103,\nE         - paragraph: Karnataka, India\nE         - text: &amp;quot;Social:&amp;quot;\nE         - link &amp;quot;Facebook&amp;quot;:\nE           - /url: https://www.facebook.com/flipkart\nE           - img &amp;quot;Facebook&amp;quot;\nE         - link &amp;quot;Twitter&amp;quot;:\nE           - /url: https://www.twitter.com/flipkart\nE           - img &amp;quot;Twitter&amp;quot;\nE         - link &amp;quot;YouTube&amp;quot;:\nE           - /url: https://www.youtube.com/flipkart\nE           - img &amp;quot;YouTube&amp;quot;\nE         - link &amp;quot;Instagram&amp;quot;:\nE           - /url: https://www.instagram.com/flipkart\nE           - img &amp;quot;Instagram&amp;quot;\nE         - text: &amp;quot;Registered Office Address:&amp;quot;\nE         - paragraph: Flipkart Internet Private Limited,\nE         - paragraph: Buildings Alyssa, Begonia &amp;amp;\nE         - paragraph: Clove Embassy Tech Village,\nE         - paragraph: Outer Ring Road, Devarabeesanahalli Village,\nE         - paragraph: Bengaluru, 560103,\nE         - paragraph: Karnataka, India\nE         - paragraph: &amp;quot;CIN : U51109KA2012PTC066107&amp;quot;\nE         - paragraph\nE         - paragraph:\nE           - text: &amp;quot;Telephone:&amp;quot;\nE           - link &amp;quot;044-45614700&amp;quot;:\nE             - /url: tel:044-45614700\nE           - text: /\nE           - link &amp;quot;044-67415800&amp;quot;:\nE             - /url: tel:044-67415800\nE         - img &amp;quot;Become a Seller&amp;quot;\nE         - link &amp;quot;Become a Seller&amp;quot;:\nE           - /url: https://seller.flipkart.com/?utm_source=fkwebsite&amp;amp;utm_medium=websitedirect\nE         - img &amp;quot;Advertise&amp;quot;\nE         - text: Advertise\nE         - img &amp;quot;Gift Cards&amp;quot;\nE         - link &amp;quot;Gift Cards&amp;quot;:\nE           - /url: /the-gift-card-store?otracker=footer_navlinks\nE         - img &amp;quot;Help Center&amp;quot;\nE         - link &amp;quot;Help Center&amp;quot;:\nE           - /url: /helpcentre?otracker=footer_navlinks\nE         - text: \u00a9 2007-2026 Flipkart.com\nE         - img &amp;quot;Payment methods&amp;quot;\nE       - contentinfo\nE       - button &amp;quot;\u2715&amp;quot;\nE       - text: Login\nE       - paragraph: Get access to your Orders, Wishlist and Recommendations\nE       - text: Log in for the best experience Enter your phone number to continue\nE       - button &amp;quot;+91&amp;quot;:\nE         - text: &amp;quot;+91&amp;quot;\nE         - img\nE       - textbox &amp;quot;Phone Number&amp;quot;\nE       - text: Phone Number\nE       - paragraph\nE       - paragraph\nE       - text: Use Email-ID By continuing, you confirm that you are above 18 years of age, and you agree to the Flipkart&amp;#x27;s\nE       - link &amp;quot;Terms of Use&amp;quot;:\nE         - /url: https://www.flipkart.com/pages/terms\nE       - text: and\nE       - link &amp;quot;Privacy Policy&amp;quot;:\nE         - /url: https://www.flipkart.com/pages/privacypolicy\nE       - button &amp;quot;Continue&amp;quot; [disabled]\n\n..\\Pages\\search_page.py:12: AssertionError\n\n---------------------------- Captured stdout setup -----------------------------\n[OK] Starting browser: chromium\n[OK] Headless mode: False (headed=True)\n[INFO] Navigating to: https://www.flipkart.com/\n[TRACE] Tracing enabled - capturing screenshots and actions\n--------------------------- Captured stdout teardown ---------------------------\n[RESULT] Test &amp;#x27;test_product_search[chromium]&amp;#x27; result: [FAIL]\n[SAVE] Trace saved: reports/traces/test_product_search[chromium]_trace.zip\n[SAVE] Screenshot saved: reports/screenshots/test_product_search[chromium].png\n[ATTACH] Screenshot attached to Allure report\n[ATTACH] Video attached to Allure report\n[CLEANUP] Closing browser context and stopping Playwright...\n&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;myreport.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+  </body>
+</html>
