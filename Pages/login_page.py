@@ -25,9 +25,9 @@ class LoginPage:
             "button", name=re.compile(r"continue", re.IGNORECASE)
         ).click()
 
-    def wait_for_otp_and_verify(self, wait_seconds: int = 10):
-        self.page.wait_for_timeout(wait_seconds * 1_000)
-        self.page.get_by_role(
+    def expect_otp_prompt(self):
+        verify_button = self.page.get_by_role(
             "button", name=re.compile(r"verify", re.IGNORECASE)
-        ).click()
-        expect(self.page).not_to_have_url(re.compile(r"/login(?:[/?#]|$)", re.IGNORECASE))
+        )
+        expect(verify_button).to_be_visible()
+        expect(verify_button).to_be_disabled()

@@ -1,0 +1,10 @@
+[OK] Starting browser: chromium
+[OK] Headless mode: True (headed=False)
+[INFO] Navigating to: https://www.flipkart.com/
+[TRACE] Tracing enabled - capturing screenshots and actions
+[RESULT] Test 'test_addcart_codegen[chromium]' result: [FAIL]
+[SAVE] Trace saved: reports/traces/test_addcart_codegen[chromium]_trace.zip
+[SAVE] Screenshot saved: reports/screenshots/test_addcart_codegen[chromium].png
+[ATTACH] Screenshot attached to Allure report
+[ATTACH] Video attached to Allure report
+[CLEANUP] Closing browser context and stopping Playwright...
